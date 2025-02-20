@@ -1,42 +1,50 @@
-From 3cce4a14528a3da245177a41f1496a78d0ec9ffa Mon Sep 17 00:00:00 2001
+From 568d692025a5f568e5c924251c62bfe6022314c9 Mon Sep 17 00:00:00 2001
 From: Elena Popa <elena.popa@nxp.com>
-Date: Tue, 24 Sep 2024 14:21:34 +0300
+Date: Thu, 20 Feb 2025 10:23:24 +0200
 Subject: [PATCH] imx93: add falcon mode support
 
 Signed-off-by: Elena Popa <elena.popa@nxp.com>
 ---
- iMX93/soc.mak | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ iMX93/soc.mak | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
 diff --git a/iMX93/soc.mak b/iMX93/soc.mak
-index 560d38e..5c02d4d 100644
+index 4ea92e3..5b07e09 100644
 --- a/iMX93/soc.mak
 +++ b/iMX93/soc.mak
-@@ -163,6 +163,15 @@ u-boot-atf-container-spinand.img: bl31.bin u-boot-hash.bin
+@@ -163,6 +163,13 @@ u-boot-atf-container-spinand.img: bl31.bin u-boot-hash.bin
  			   -out u-boot-atf-container-spinand.img; \
  	fi
  
-+kernel-atf-container.img: bl31.bin Image
++kernel-atf-dtb-container.img: bl31.bin Image $(KERNEL_DTB_FIXED)
 +	./$(MKIMG) -soc IMX9 -c \
 +		   -ap bl31.bin a55 $(ATF_LOAD_ADDR) \
 +		   -ap Image a55 $(UBOOT_LOAD_ADDR) \
-+		   -out kernel-atf-container.img; \
-+
-+uImage: Image
-+	mkimage -A arm -O linux -T kernel -C none -a 0x83FFFFC0 -e 0x84000000 -n "Linux kernel" -d Image uImage
++		   --data $(KERNEL_DTB_FIXED) a55 $(KERNEL_DTB_ADDR) \
++		   -out kernel-atf-dtb-container.img;
 +
  fcb.bin: FORCE
  	./$(QSPI_FCB_GEN) $(QSPI_HEADER)
  
-@@ -172,7 +181,7 @@ flash_fw.bin: FORCE
+@@ -172,7 +179,7 @@ flash_fw.bin: FORCE
  
  .PHONY: clean nightly
  clean:
 -	@rm -f $(MKIMG) u-boot-atf-container.img u-boot-spl-ddr.bin u-boot-spl-ddr-qb.bin u-boot-hash.bin
-+	@rm -f $(MKIMG) u-boot-atf-container.img u-boot-spl-ddr.bin u-boot-spl-ddr-qb.bin u-boot-hash.bin kernel-atf-container.img uImage
++	@rm -f $(MKIMG) u-boot-atf-container.img u-boot-spl-ddr.bin u-boot-spl-ddr-qb.bin u-boot-hash.bin kernel-atf-dtb-container.img
  	@rm -rf extracted_imgs
  	@echo "imx93 clean done"
  
+@@ -212,6 +219,9 @@ flash_singleboot_stmm_capsule: overlay flash_singleboot
+ flash_singleboot_stmm: flash_singleboot_stmm_capsule
+ endif
+ 
++# target used when booting in falcon mode; remove the U-Boot from flash.bin, since is no longer used
++flash_singleboot_no_uboot: $(MKIMG) $(AHAB_IMG) $(SPL_A55_IMG)
++	./$(MKIMG) -soc IMX9 -append $(AHAB_IMG) -c -ap $(SPL_A55_IMG) a55 $(SPL_LOAD_ADDR) -out flash.bin
+ 
+ flash_singleboot: $(MKIMG) $(AHAB_IMG) $(SPL_A55_IMG) u-boot-atf-container.img
+ 	./$(MKIMG) -soc IMX9 -append $(AHAB_IMG) -c -ap $(SPL_A55_IMG) a55 $(SPL_LOAD_ADDR) -out flash.bin
 -- 
-2.25.1
+2.34.1
 
