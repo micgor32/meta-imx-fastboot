@@ -1,1 +1,1 @@
-include falcon.inc
+require falcon.inc

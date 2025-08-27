@@ -1,20 +1,20 @@
-From 9f659ab047b90dbe3f31dc190992c671f2b5eae5 Mon Sep 17 00:00:00 2001
+From 83a7dd23e85d9ec922757307feb1aab8ec722ffc Mon Sep 17 00:00:00 2001
 From: Elena Popa <elena.popa@nxp.com>
-Date: Mon, 4 Aug 2025 23:13:24 +0300
-Subject: [PATCH] imx95: add falcon mode support
+Date: Mon, 4 Aug 2025 16:47:20 +0300
+Subject: [PATCH] imx943: add falcon mode support
 
 Upstream-Status: Inappropriate [board-specific Falcon Mode support]
 
 Signed-off-by: Elena Popa <elena.popa@nxp.com>
 ---
- plat/imx/imx9/imx95/imx95_bl31_setup.c | 5 +++++
+ plat/imx/imx9/imx94/imx94_bl31_setup.c | 5 +++++
  1 file changed, 5 insertions(+)
 
-diff --git a/plat/imx/imx9/imx95/imx95_bl31_setup.c b/plat/imx/imx9/imx95/imx95_bl31_setup.c
-index 6f8d68b60..6f02633a3 100644
---- a/plat/imx/imx9/imx95/imx95_bl31_setup.c
-+++ b/plat/imx/imx9/imx95/imx95_bl31_setup.c
-@@ -81,6 +81,11 @@ void bl31_early_platform_setup2(u_register_t arg0, u_register_t arg1,
+diff --git a/plat/imx/imx9/imx94/imx94_bl31_setup.c b/plat/imx/imx9/imx94/imx94_bl31_setup.c
+index 0a9891a44..2a3e130a4 100644
+--- a/plat/imx/imx9/imx94/imx94_bl31_setup.c
++++ b/plat/imx/imx9/imx94/imx94_bl31_setup.c
+@@ -84,6 +84,11 @@ void bl31_early_platform_setup2(u_register_t arg0, u_register_t arg1,
  	 */
  	bl33_image_ep_info.pc = PLAT_NS_IMAGE_OFFSET;
  	bl33_image_ep_info.spsr = get_spsr_for_bl33_entry();

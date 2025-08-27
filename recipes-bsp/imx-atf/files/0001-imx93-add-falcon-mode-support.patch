@@ -3,6 +3,8 @@ From: Elena Popa <elena.popa@nxp.com>
 Date: Tue, 24 Sep 2024 11:53:35 +0300
 Subject: [PATCH] imx93: add falcon mode support
 
+Upstream-Status: Inappropriate [board-specific Falcon Mode support]
+
 Signed-off-by: Elena Popa <elena.popa@nxp.com>
 ---
  plat/imx/imx93/imx93_bl31_setup.c | 7 ++++++-

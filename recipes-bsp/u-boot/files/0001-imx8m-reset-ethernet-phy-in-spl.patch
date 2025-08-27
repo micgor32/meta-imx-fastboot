@@ -1,11 +1,13 @@
-From 608952e86a59d71641615240c617d28b41004b5b Mon Sep 17 00:00:00 2001
+From 0b1849674da327926def7b0320adf5585f2e596a Mon Sep 17 00:00:00 2001
 From: Elena Popa <elena.popa@nxp.com>
-Date: Tue, 18 Feb 2025 14:06:44 +0200
+Date: Sat, 9 Aug 2025 20:16:46 +0300
 Subject: [PATCH] imx8m: reset ethernet phy in spl
 
 Reset the Ethernet PHY for the i.MX 8M Family. To bring it up the operational
 state in which Ethernet MAC can communicate with the PHY, this must be reset in
 SPL, before starting the kernel, when Falcon Mode is enabled.
+
+Upstream-Status: Inappropriate [board-specific Falcon Mode support]
 
 Signed-off-by: Elena Popa <elena.popa@nxp.com>
 ---
@@ -13,7 +15,7 @@ Signed-off-by: Elena Popa <elena.popa@nxp.com>
  1 file changed, 29 insertions(+)
 
 diff --git a/common/spl/spl.c b/common/spl/spl.c
-index b65c439e7aa..9db66c14879 100644
+index 76fd56dfe4b..7f7e9de65c8 100644
 --- a/common/spl/spl.c
 +++ b/common/spl/spl.c
 @@ -4,6 +4,9 @@
@@ -25,8 +27,8 @@ index b65c439e7aa..9db66c14879 100644
 + *
   */
  
- #include <common.h>
-@@ -43,10 +46,20 @@
+ #include <config.h>
+@@ -42,10 +45,20 @@
  #include <bootcount.h>
  #include <wdt.h>
  #include <video.h>
@@ -47,8 +49,8 @@ index b65c439e7aa..9db66c14879 100644
  u32 *boot_params_ptr = NULL;
  
  #if CONFIG_IS_ENABLED(BINMAN_UBOOT_SYMBOLS)
-@@ -711,6 +724,22 @@ void board_init_r(gd_t *dummy1, ulong dummy2)
- 		}
+@@ -745,6 +758,22 @@ void board_init_r(gd_t *dummy1, ulong dummy2)
+ 		/* Don't fail. We still can try other boot methods. */
  	}
  
 +#ifdef CONFIG_ARCH_IMX8M

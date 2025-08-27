@@ -1,34 +1,38 @@
-From cc604238a97870d2b0bef638b0629089bc50e2a8 Mon Sep 17 00:00:00 2001
+From d9769ad820760fd4d7a674d6090a52b29dd515e6 Mon Sep 17 00:00:00 2001
 From: Elena Popa <elena.popa@nxp.com>
-Date: Mon, 24 Feb 2025 14:47:12 +0200
+Date: Fri, 24 Oct 2025 13:19:57 +0300
 Subject: [PATCH] fix the kernel DTB directly in SPL
+
+Upstream-Status: Inappropriate [board-specific Falcon Mode support]
 
 Signed-off-by: Elena Popa <elena.popa@nxp.com>
 ---
- arch/arm/mach-imx/imx8m/soc.c |  2 +-
- common/spl/Kconfig            |  9 ++++++++-
- common/spl/spl.c              | 11 +++++++++++
- common/spl/spl_fat.c          |  3 ++-
- 4 files changed, 22 insertions(+), 3 deletions(-)
+ arch/arm/mach-imx/Makefile |  2 --
+ common/spl/Kconfig         |  9 ++++++++-
+ common/spl/spl.c           | 11 +++++++++++
+ common/spl/spl_fat.c       |  2 ++
+ 4 files changed, 21 insertions(+), 3 deletions(-)
 
-diff --git a/arch/arm/mach-imx/imx8m/soc.c b/arch/arm/mach-imx/imx8m/soc.c
-index c3282ccc213..0b2af61d84c 100644
---- a/arch/arm/mach-imx/imx8m/soc.c
-+++ b/arch/arm/mach-imx/imx8m/soc.c
-@@ -1816,7 +1816,7 @@ usb_modify_speed:
-                        "kaslr-seed", fdt_strerror(ret));
- 	}
+diff --git a/arch/arm/mach-imx/Makefile b/arch/arm/mach-imx/Makefile
+index 76c067fe4dd..95944ecead6 100644
+--- a/arch/arm/mach-imx/Makefile
++++ b/arch/arm/mach-imx/Makefile
+@@ -23,10 +23,8 @@ obj-y += cpu.o
+ endif
  
--#if defined(CONFIG_ANDROID_SUPPORT) || defined(CONFIG_ANDROID_AUTO_SUPPORT)
-+#if defined(CONFIG_ANDROID_SUPPORT) || defined(CONFIG_ANDROID_AUTO_SUPPORT) || defined(CONFIG_SPL_BUILD)
- 	return 0;
- #else
- 	return ft_add_optee_node(blob, bd);
+ ifeq ($(SOC),$(filter $(SOC),imx8m imx9))
+-ifneq ($(CONFIG_XPL_BUILD),y)
+ obj-y += fdt.o
+ endif
+-endif
+ 
+ ifeq ($(SOC),$(filter $(SOC),mx5 mx6))
+ obj-y	+= cpu.o speed.o
 diff --git a/common/spl/Kconfig b/common/spl/Kconfig
-index dc923cd7334..caa5df926fa 100644
+index b13ac501052..aa749034c13 100644
 --- a/common/spl/Kconfig
 +++ b/common/spl/Kconfig
-@@ -732,9 +732,16 @@ config SPL_FS_LOAD_KERNEL_NAME
+@@ -777,9 +777,16 @@ config SPL_FS_LOAD_KERNEL_NAME
  	  Filename to read to load for the OS kernel when reading from the
  	  filesystem.
  
@@ -47,25 +51,25 @@ index dc923cd7334..caa5df926fa 100644
  	help
  	  Filename to read to load for the OS kernel argument parameters from
 diff --git a/common/spl/spl.c b/common/spl/spl.c
-index b65c439e7aa..d5b8b0b4881 100644
+index 76fd56dfe4b..2e00c36f909 100644
 --- a/common/spl/spl.c
 +++ b/common/spl/spl.c
-@@ -150,6 +150,14 @@ void spl_fixup_fdt(void *fdt_blob)
- 		printf(SPL_TPL_PROMPT "arch_fixup_fdt err - %d\n", err);
+@@ -151,6 +151,14 @@ void spl_fixup_fdt(void *fdt_blob)
+ 		printf(PHASE_PROMPT "arch_fixup_fdt err - %d\n", err);
  		return;
  	}
 +
 +	if (IS_ENABLED(CONFIG_OF_SYSTEM_SETUP)) {
 +		err = ft_system_setup(fdt_blob, gd->bd);
 +		if (err) {
-+			printf(SPL_TPL_PROMPT "ft_system_setup err - %d\n", err);
++			printf(PHASE_PROMPT "ft_system_setup err - %d\n", err);
 +			return;
 +		}
 +	}
  #endif
  }
  
-@@ -777,6 +785,9 @@ void board_init_r(gd_t *dummy1, ulong dummy2)
+@@ -797,6 +805,9 @@ void board_init_r(gd_t *dummy1, ulong dummy2)
  			spl_fixup_fdt((void *)SPL_PAYLOAD_ARGS_ADDR);
  		spl_board_prepare_for_linux();
  		jump_to_image = &jump_to_image_linux;
@@ -76,10 +80,10 @@ index b65c439e7aa..d5b8b0b4881 100644
  		debug("Unsupported OS image.. Jumping nevertheless..\n");
  	}
 diff --git a/common/spl/spl_fat.c b/common/spl/spl_fat.c
-index a52f9e178e6..a1e682e0298 100644
+index fce451b7664..c8bf9d4bd02 100644
 --- a/common/spl/spl_fat.c
 +++ b/common/spl/spl_fat.c
-@@ -115,6 +115,7 @@ int spl_load_image_fat_os(struct spl_image_info *spl_image,
+@@ -111,6 +111,7 @@ int spl_load_image_fat_os(struct spl_image_info *spl_image,
  	if (err)
  		return err;
  
@@ -87,15 +91,14 @@ index a52f9e178e6..a1e682e0298 100644
  #if defined(CONFIG_SPL_ENV_SUPPORT) && defined(CONFIG_SPL_OS_BOOT)
  	file = env_get("falcon_args_file");
  	if (file) {
-@@ -151,7 +152,7 @@ defaults:
+@@ -147,6 +148,7 @@ defaults:
  #endif
  		return -1;
  	}
--
 +#endif
+ 
  	return spl_load_image_fat(spl_image, bootdev, block_dev, partition,
  			CONFIG_SPL_FS_LOAD_KERNEL_NAME);
- }
 -- 
 2.34.1
 

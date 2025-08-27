@@ -1,7 +1,9 @@
-From 115eca1edbb42d64f53b7eadad75a0e5d6c056e8 Mon Sep 17 00:00:00 2001
+From 0af0c4337abbe77fbb65eaf32e31934d37801aae Mon Sep 17 00:00:00 2001
 From: Elena Popa <elena.popa@nxp.com>
-Date: Mon, 17 Feb 2025 14:08:44 +0200
+Date: Tue, 5 Aug 2025 01:01:35 +0300
 Subject: [PATCH] imx93: add falcon mode support
+
+Upstream-Status: Inappropriate [board-specific Falcon Mode support]
 
 Signed-off-by: Elena Popa <elena.popa@nxp.com>
 ---
@@ -9,7 +11,7 @@ Signed-off-by: Elena Popa <elena.popa@nxp.com>
  1 file changed, 19 insertions(+), 1 deletion(-)
 
 diff --git a/board/freescale/imx93_evk/spl.c b/board/freescale/imx93_evk/spl.c
-index def3bab2509..ea42c056dbd 100644
+index e82537648d4..39b5c59a4e3 100644
 --- a/board/freescale/imx93_evk/spl.c
 +++ b/board/freescale/imx93_evk/spl.c
 @@ -1,6 +1,6 @@
@@ -19,8 +21,8 @@ index def3bab2509..ea42c056dbd 100644
 + * Copyright 2022, 2024-2025 NXP
   */
  
- #include <common.h>
-@@ -35,9 +35,27 @@
+ #include <command.h>
+@@ -34,9 +34,27 @@
  #include <power/pca9450.h>
  #include <power/pf0900.h>
  #include <asm/arch/trdc.h>

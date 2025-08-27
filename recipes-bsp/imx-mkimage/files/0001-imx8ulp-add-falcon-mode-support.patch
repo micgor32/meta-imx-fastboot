@@ -1,0 +1,47 @@
+From e20c5990464af3fad5c616ddae96f7b1d3ab5de0 Mon Sep 17 00:00:00 2001
+From: Elena Popa <elena.popa@nxp.com>
+Date: Thu, 14 Aug 2025 11:34:00 +0300
+Subject: [PATCH] imx8ulp: add falcon mode support
+
+Upstream-Status: Inappropriate [board-specific Falcon Mode support]
+
+Signed-off-by: Elena Popa <elena.popa@nxp.com>
+---
+ iMX8ULP/soc.mak | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/iMX8ULP/soc.mak b/iMX8ULP/soc.mak
+index dd61cd7..38650d7 100644
+--- a/iMX8ULP/soc.mak
++++ b/iMX8ULP/soc.mak
+@@ -67,9 +67,16 @@ u-boot-atf-container.img: bl31.bin u-boot-hash.bin
+ 		./$(MKIMG) -soc ULP -c -ap bl31.bin a35 $(ATF_LOAD_ADDR) -ap u-boot-hash.bin a35 $(UBOOT_LOAD_ADDR) -out u-boot-atf-container.img; \
+ 	fi
+ 
++kernel-atf-dtb-container.img: bl31.bin Image $(KERNEL_DTB_FIXED)
++	./$(MKIMG) -soc ULP -c \
++		-ap bl31.bin a35 $(ATF_LOAD_ADDR) \
++		-ap Image a35 $(UBOOT_LOAD_ADDR) \
++		--data $(KERNEL_DTB_FIXED) a35 0x83000000 \
++		-out kernel-atf-dtb-container.img;
++
+ .PHONY: clean nightly
+ clean:
+-	@rm -f $(MKIMG) u-boot-atf-container.img
++	@rm -f $(MKIMG) u-boot-atf-container.img kernel-atf-dtb-container.img
+ 	@rm -rf extracted_imgs
+ 	@echo "imx8ulp clean done"
+ 
+@@ -120,6 +127,9 @@ flash_singleboot_m33: $(MKIMG) $(AHAB_IMG) $(UPOWER_IMG) u-boot-atf-container.im
+                    echo "append u-boot-atf-container.img at $$pad_cnt KB"; \
+                    dd if=u-boot-atf-container.img of=flash.bin bs=1K seek=$$pad_cnt;
+ 
++flash_singleboot_m33_no_uboot: $(MKIMG) $(AHAB_IMG) $(UPOWER_IMG) $(MCU_IMG) u-boot-spl.bin
++	./$(MKIMG) -soc ULP -append $(AHAB_IMG) -c -upower $(UPOWER_IMG) -m4 $(MCU_IMG) 0 $(MCU_SSRAM_ADDR) -ap u-boot-spl.bin a35 $(SPL_LOAD_ADDR) -out flash.bin
++
+ flash_singleboot_m33_rom_patch: $(MKIMG) $(AHAB_IMG) $(UPOWER_IMG) u-boot-atf-container.img $(MCU_IMG) u-boot-spl.bin $(ROM_PATCH_IMG)
+ 	./$(MKIMG) -soc ULP -append $(AHAB_IMG) -c -upower $(UPOWER_IMG) -m4 $(MCU_IMG) 0 $(MCU_SSRAM_ADDR) --data $(ROM_PATCH_IMG) a35 0x1fff9000 -ap u-boot-spl.bin a35 $(SPL_LOAD_ADDR) -out flash.bin
+ 	cp flash.bin boot-spl-container.img
+-- 
+2.34.1
+

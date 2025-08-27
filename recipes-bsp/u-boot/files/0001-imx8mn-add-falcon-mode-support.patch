@@ -3,6 +3,8 @@ From: Elena Popa <elena.popa@nxp.com>
 Date: Mon, 17 Feb 2025 14:04:24 +0200
 Subject: [PATCH] imx8mn: add falcon mode support
 
+Upstream-Status: Inappropriate [board-specific Falcon Mode support]
+
 Signed-off-by: Elena Popa <elena.popa@nxp.com>
 ---
  board/freescale/imx8mn_evk/spl.c | 20 +++++++++++++++++++-

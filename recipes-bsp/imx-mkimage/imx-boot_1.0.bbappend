@@ -2,11 +2,15 @@ DEPENDS:append = " virtual/kernel u-boot-mkimage-native"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
+SRC_URI:append:mx8ulp-generic-bsp = " file://0001-imx8ulp-add-falcon-mode-support.patch "
+
 SRC_URI:append:mx8m-generic-bsp = " file://0001-imx8m-add-falcon-mode-support.patch "
 
 SRC_URI:append:mx93-generic-bsp = " file://0001-imx93-add-falcon-mode-support.patch "
 
 SRC_URI:append:mx95-generic-bsp = " file://0001-imx95-add-falcon-mode-support.patch "
+
+SRC_URI:append:mx943-generic-bsp = " file://0001-imx943-add-falcon-mode-support.patch "
 
 do_compile[depends] += " \
     virtual/kernel:do_deploy \

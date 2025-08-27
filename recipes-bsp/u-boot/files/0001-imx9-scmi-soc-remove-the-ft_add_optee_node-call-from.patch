@@ -1,0 +1,36 @@
+From 1753bb04b4447148bbc7526981113f08d6ce0361 Mon Sep 17 00:00:00 2001
+From: Elena Popa <elena.popa@nxp.com>
+Date: Tue, 21 Oct 2025 16:40:24 +0300
+Subject: [PATCH] imx9:scmi:soc: remove the ft_add_optee_node call from SPL
+
+When U-Boot proper is skipped, the ft_system_setup() function must be
+called in SPL. This function calls, in turn, the ft_add_optee_node(),
+which will not execute correctly, because at that point, rom_pointer is
+not initialized with the correct values.
+
+Upstream-Status: Inappropriate [board-specific Falcon Mode support]
+
+Signed-off-by: Elena Popa <elena.popa@nxp.com>
+---
+ arch/arm/mach-imx/imx9/scmi/soc.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/mach-imx/imx9/scmi/soc.c b/arch/arm/mach-imx/imx9/scmi/soc.c
+index 4cf0bc46ebf..73e0b4cc8c6 100644
+--- a/arch/arm/mach-imx/imx9/scmi/soc.c
++++ b/arch/arm/mach-imx/imx9/scmi/soc.c
+@@ -1350,7 +1350,11 @@ int ft_system_setup(void *blob, struct bd_info *bd)
+ 				"kaslr-seed", fdt_strerror(ret));
+ 	}
+ 
++#if defined(CONFIG_SPL_BUILD)
++	return 0;
++#else
+ 	return ft_add_optee_node(blob, bd);
++#endif
+ }
+ 
+ /* Fix uboot dtb based on fuses. */
+-- 
+2.34.1
+

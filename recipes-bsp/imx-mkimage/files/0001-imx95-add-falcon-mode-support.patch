@@ -1,7 +1,9 @@
-From a08a6fe6bce917a62c991e7cbfba8026749ec66b Mon Sep 17 00:00:00 2001
+From 771fa2cd1e14c92599addcd59d7bf252466391a9 Mon Sep 17 00:00:00 2001
 From: Elena Popa <elena.popa@nxp.com>
-Date: Thu, 20 Feb 2025 10:34:09 +0200
+Date: Mon, 4 Aug 2025 23:30:01 +0300
 Subject: [PATCH] imx95: add falcon mode support
+
+Upstream-Status: Inappropriate [board-specific Falcon Mode support]
 
 Signed-off-by: Elena Popa <elena.popa@nxp.com>
 ---
@@ -9,28 +11,28 @@ Signed-off-by: Elena Popa <elena.popa@nxp.com>
  1 file changed, 34 insertions(+), 1 deletion(-)
 
 diff --git a/iMX95/soc.mak b/iMX95/soc.mak
-index 4cce38e..24df8dc 100644
+index a3eaa2e..34556e0 100644
 --- a/iMX95/soc.mak
 +++ b/iMX95/soc.mak
-@@ -256,6 +256,27 @@ u-boot-atf-container-spinand.img: bl31.bin u-boot-hash.bin
+@@ -296,6 +296,27 @@ u-boot-atf-container-spinand.img: bl31.bin u-boot-hash.bin
  			   -out u-boot-atf-container-spinand.img; \
  	fi
  
-+ifeq ($(REV),A0)
++ifneq ($(LC_REVISION),b0)
 +prepare_kernel_chunks_falcon: Image
 +	cp Image Image-falcon
 +	./$(SPLIT_KERNEL) Image-falcon $(UBOOT_LOAD_ADDR) 0x700000
 +
 +kernel-atf-dtb-container.img: bl31.bin prepare_kernel_chunks_falcon $(KERNEL_DTB_FIXED)
 +	KERNEL_CMD="$(shell cat Image-falcon_cmd)"; \
-+	./$(MKIMG) -soc IMX9 -c \
++	./$(MKIMG) -soc IMX9 -cntr_version $(CTNR_VERSION) -c \
 +		   -ap bl31.bin a55 $(ATF_LOAD_ADDR) \
-+                   $$KERNEL_CMD \
-+                   --data $(KERNEL_DTB_FIXED) a55 $(KERNEL_DTB_ADDR) \
-+                   -out kernel-atf-dtb-container.img;
++		   $$KERNEL_CMD \
++		   --data $(KERNEL_DTB_FIXED) a55 $(KERNEL_DTB_ADDR) \
++		   -out kernel-atf-dtb-container.img;
 +else
 +kernel-atf-dtb-container.img: bl31.bin Image $(KERNEL_DTB_FIXED)
-+	./$(MKIMG) -soc IMX9 -c \
++	./$(MKIMG) -soc IMX9 -cntr_version $(CTNR_VERSION) -c \
 +		   -ap bl31.bin a55 $(ATF_LOAD_ADDR) \
 +		   -ap Image a55 $(UBOOT_LOAD_ADDR) \
 +		   --data $(KERNEL_DTB_FIXED) a55 $(KERNEL_DTB_ADDR) \
@@ -40,7 +42,7 @@ index 4cce38e..24df8dc 100644
  fcb.bin: FORCE
  	./$(QSPI_FCB_GEN) $(QSPI_HEADER)
  
-@@ -265,7 +286,7 @@ flash_fw.bin: FORCE
+@@ -305,7 +326,7 @@ flash_fw.bin: FORCE
  
  .PHONY: clean nightly
  clean:
@@ -49,23 +51,23 @@ index 4cce38e..24df8dc 100644
  	@rm -rf extracted_imgs
  	@echo "imx95 clean done"
  
-@@ -374,6 +395,18 @@ flash_all_no_ahabfw: $(MKIMG) $(MCU_IMG) $(M7_IMG) u-boot-atf-container.img $(SP
+@@ -421,6 +442,18 @@ flash_all_ap: $(MKIMG) $(AHAB_IMG) $(MCU_IMG) $(M7_IMG) $(AP_IMG) $(OEI_IMG_M33)
  flash_sentinel: $(MKIMG) ahabfw.bin
- 	./$(MKIMG) -soc IMX9 -c -sentinel ahabfw.bin -out flash.bin
+ 	./$(MKIMG) -soc IMX9 -cntr_version $(CTNR_VERSION) $(MMC_FAST_HASH) -c -sentinel ahabfw.bin -out flash.bin
  
 +# targets used when booting in falcon mode; remove the U-Boot from flash.bin, since is no longer used
 +flash_a55_no_uboot: $(MKIMG) $(AHAB_IMG) $(MCU_IMG) $(SPL_A55_IMG) $(OEI_IMG_M33) $(OEI_M33_DDR_IMG)
-+	./$(MKIMG) -soc IMX9 -append $(AHAB_IMG) -c $(OEI_OPT_M33) -msel $(MSEL) \
-+                   -m33 $(MCU_IMG) 0 $(MCU_TCM_ADDR) \
++	./$(MKIMG) -soc IMX9 -cntr_version $(CTNR_VERSION) -append $(AHAB_IMG) -c $(OEI_OPT_M33) -msel $(MSEL) \
++		   -m33 $(MCU_IMG) 0 $(MCU_TCM_ADDR) \
 +		   -ap $(SPL_A55_IMG) a55 $(SPL_LOAD_ADDR_M33_VIEW) $(V2X_DUMMY) -out flash.bin
 +
 +flash_all_no_uboot: $(MKIMG) $(AHAB_IMG) $(MCU_IMG) $(M7_IMG) $(SPL_A55_IMG) $(OEI_IMG_M33)
-+	./$(MKIMG) -soc IMX9 -append $(AHAB_IMG) -c $(OEI_OPT_M33) -msel $(MSEL) \
++	./$(MKIMG) -soc IMX9 -cntr_version $(CTNR_VERSION) -append $(AHAB_IMG) -c $(OEI_OPT_M33) -msel $(MSEL) \
 +		   -m33 $(MCU_IMG) 0 $(MCU_TCM_ADDR) \
 +		   -m7 $(M7_IMG) 0 $(M7_TCM_ADDR) $(M7_TCM_ADDR_ALIAS)  \
 +		   -ap $(SPL_A55_IMG) a55 $(SPL_LOAD_ADDR_M33_VIEW) $(V2X_DUMMY) -out flash.bin
 +
- ifeq ($(REV),A0)
+ ifneq ($(LC_REVISION),b0)
  prepare_kernel_chunks: Image
  	./$(SPLIT_KERNEL) Image $(KERNEL_ADDR) 0x700000
 -- 
