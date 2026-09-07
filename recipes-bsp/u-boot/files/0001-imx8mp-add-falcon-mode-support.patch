@@ -1,35 +1,25 @@
-From 5e520ce8cd4381d3cb20c212203f10eb77142df1 Mon Sep 17 00:00:00 2001
-From: Elena Popa <elena.popa@nxp.com>
-Date: Thu, 20 Feb 2025 11:06:21 +0200
+From 89d5dd025d1955f5d02b494f50a64a4b240b6cc6 Mon Sep 17 00:00:00 2001
+From: Michal Gorlas <michal.gorlas@9elements.com>
+Date: Thu, 20 Aug 2026 22:49:21 +0200
 Subject: [PATCH] imx8mp: add falcon mode support
 
-Upstream-Status: Inappropriate [board-specific Falcon Mode support]
-
-Signed-off-by: Elena Popa <elena.popa@nxp.com>
+Signed-off-by: Michal Gorlas <michal.gorlas@9elements.com>
+Upstream-Status: Pending
 ---
- board/freescale/imx8mp_evk/spl.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+ board/nxp/imx8mp_evk/spl.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/board/freescale/imx8mp_evk/spl.c b/board/freescale/imx8mp_evk/spl.c
-index b7b21f0b490..d035895c4f2 100644
---- a/board/freescale/imx8mp_evk/spl.c
-+++ b/board/freescale/imx8mp_evk/spl.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0-or-later
- /*
-- * Copyright 2018-2019, 2021 NXP
-+ * Copyright 2018-2019, 2021, 2024-2025 NXP
-  *
-  */
- 
-@@ -28,9 +28,27 @@
- #include <mmc.h>
- #include <asm/arch/ddr.h>
+diff --git a/board/nxp/imx8mp_evk/spl.c b/board/nxp/imx8mp_evk/spl.c
+index 165a8cf585f..e5e8308a491 100644
+--- a/board/nxp/imx8mp_evk/spl.c
++++ b/board/nxp/imx8mp_evk/spl.c
+@@ -19,6 +19,25 @@
+ #include <asm/arch/sys_proto.h>
+ #include <asm/mach-imx/boot_mode.h>
  #include <asm/sections.h>
 +#include <serial.h>
- 
- DECLARE_GLOBAL_DATA_PTR;
- 
++
++
 +#ifdef CONFIG_SPL_OS_BOOT
 +int spl_start_uboot(void) {
 +	static int last_call = -1;
@@ -39,17 +29,16 @@ index b7b21f0b490..d035895c4f2 100644
 +	if (IS_ENABLED(CONFIG_SPL_SERIAL) && serial_tstc() && serial_getc()) {
 +	/* break into full u boot if any key is pressed */
 +		while(serial_tstc()) { /* eat up all the remaining characters */
-+			serial_getc();
++   		serial_getc();
 +		}
 +		return last_call = 1;
 +	}
-+	return last_call = 0; // start the Kernel
-+}
-+#endif
-+
++ 	return last_call = 0; // start the Kernel
++ }
++ #endif
+ 
  int spl_board_boot_device(enum boot_device boot_dev_spl)
  {
- #ifdef CONFIG_SPL_BOOTROM_SUPPORT
 -- 
-2.34.1
+2.47.3
 

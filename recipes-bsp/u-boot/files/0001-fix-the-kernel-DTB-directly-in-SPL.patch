@@ -1,20 +1,19 @@
-From d9769ad820760fd4d7a674d6090a52b29dd515e6 Mon Sep 17 00:00:00 2001
-From: Elena Popa <elena.popa@nxp.com>
-Date: Fri, 24 Oct 2025 13:19:57 +0300
+From e3ee73334f275d5c38a50c0135a0b0003aef6f3d Mon Sep 17 00:00:00 2001
+From: Michal Gorlas <michal.gorlas@9elements.com>
+Date: Thu, 20 Aug 2026 23:34:38 +0200
 Subject: [PATCH] fix the kernel DTB directly in SPL
 
+Signed-off-by: Michal Gorlas <michal.gorlas@9elements.com>
 Upstream-Status: Inappropriate [board-specific Falcon Mode support]
-
-Signed-off-by: Elena Popa <elena.popa@nxp.com>
 ---
  arch/arm/mach-imx/Makefile |  2 --
  common/spl/Kconfig         |  9 ++++++++-
  common/spl/spl.c           | 11 +++++++++++
- common/spl/spl_fat.c       |  2 ++
- 4 files changed, 21 insertions(+), 3 deletions(-)
+ common/spl/spl_fat.c       | 12 +-----------
+ 4 files changed, 20 insertions(+), 14 deletions(-)
 
 diff --git a/arch/arm/mach-imx/Makefile b/arch/arm/mach-imx/Makefile
-index 76c067fe4dd..95944ecead6 100644
+index 20f8cfd4d73..d303a3fa670 100644
 --- a/arch/arm/mach-imx/Makefile
 +++ b/arch/arm/mach-imx/Makefile
 @@ -23,10 +23,8 @@ obj-y += cpu.o
@@ -29,10 +28,10 @@ index 76c067fe4dd..95944ecead6 100644
  ifeq ($(SOC),$(filter $(SOC),mx5 mx6))
  obj-y	+= cpu.o speed.o
 diff --git a/common/spl/Kconfig b/common/spl/Kconfig
-index b13ac501052..aa749034c13 100644
+index dfd07c7edf1..059dd4d6571 100644
 --- a/common/spl/Kconfig
 +++ b/common/spl/Kconfig
-@@ -777,9 +777,16 @@ config SPL_FS_LOAD_KERNEL_NAME
+@@ -807,9 +807,16 @@ config SPL_FS_LOAD_KERNEL_NAME
  	  Filename to read to load for the OS kernel when reading from the
  	  filesystem.
  
@@ -45,16 +44,16 @@ index b13ac501052..aa749034c13 100644
 +
  config SPL_FS_LOAD_ARGS_NAME
  	string "File to load for the OS kernel argument parameters from the filesystem"
--	depends on (SPL_FS_EXT4 || SPL_FS_FAT || SPL_FS_SQUASHFS) && SPL_OS_BOOT
-+	depends on (SPL_FS_EXT4 || SPL_FS_FAT || SPL_FS_SQUASHFS) && SPL_OS_BOOT && !SPL_FS_SKIP_ARGS
+-	depends on (SPL_FS_EXT4 || SPL_FS_FAT || SPL_FS_SQUASHFS) && SPL_OS_BOOT_ARGS
++	depends on (SPL_FS_EXT4 || SPL_FS_FAT || SPL_FS_SQUASHFS) && SPL_OS_BOOT_ARGS && !SPL_FS_SKIP_ARGS
  	default "args"
  	help
  	  Filename to read to load for the OS kernel argument parameters from
 diff --git a/common/spl/spl.c b/common/spl/spl.c
-index 76fd56dfe4b..2e00c36f909 100644
+index fd915d9564b..c1b6a908639 100644
 --- a/common/spl/spl.c
 +++ b/common/spl/spl.c
-@@ -151,6 +151,14 @@ void spl_fixup_fdt(void *fdt_blob)
+@@ -156,6 +156,14 @@ void spl_fixup_fdt(void *fdt_blob)
  		printf(PHASE_PROMPT "arch_fixup_fdt err - %d\n", err);
  		return;
  	}
@@ -69,10 +68,10 @@ index 76fd56dfe4b..2e00c36f909 100644
  #endif
  }
  
-@@ -797,6 +805,9 @@ void board_init_r(gd_t *dummy1, ulong dummy2)
- 			spl_fixup_fdt((void *)SPL_PAYLOAD_ARGS_ADDR);
+@@ -809,6 +817,9 @@ void board_init_r(gd_t *dummy1, ulong dummy2)
  		spl_board_prepare_for_linux();
- 		jump_to_image = &jump_to_image_linux;
+ 		spl_image.arg = fdt;
+ 		jumper = &jump_to_image_linux;
 +	} else if (CONFIG_IS_ENABLED(OS_BOOT) && !spl_start_uboot()) {
 +		debug("Jumping to ATF -> Kernel\n");
 +		spl_fixup_fdt((void *)SPL_PAYLOAD_ARGS_ADDR);
@@ -80,25 +79,35 @@ index 76fd56dfe4b..2e00c36f909 100644
  		debug("Unsupported OS image.. Jumping nevertheless..\n");
  	}
 diff --git a/common/spl/spl_fat.c b/common/spl/spl_fat.c
-index fce451b7664..c8bf9d4bd02 100644
+index 8b1d01cff4b..0817cd5a642 100644
 --- a/common/spl/spl_fat.c
 +++ b/common/spl/spl_fat.c
-@@ -111,6 +111,7 @@ int spl_load_image_fat_os(struct spl_image_info *spl_image,
+@@ -117,7 +117,7 @@ int spl_load_image_fat_os(struct spl_image_info *spl_image,
  	if (err)
  		return err;
  
-+#ifndef CONFIG_SPL_FS_SKIP_ARGS
- #if defined(CONFIG_SPL_ENV_SUPPORT) && defined(CONFIG_SPL_OS_BOOT)
- 	file = env_get("falcon_args_file");
- 	if (file) {
-@@ -147,6 +148,7 @@ defaults:
- #endif
- 		return -1;
- 	}
-+#endif
+-	if (!CONFIG_IS_ENABLED(ENV_SUPPORT))
++	if (!CONFIG_IS_ENABLED(ENV_SUPPORT) || !CONFIG_IS_ENABLED(SPL_FS_SKIP_ARGS))
+ 		goto defaults;
  
- 	return spl_load_image_fat(spl_image, bootdev, block_dev, partition,
- 			CONFIG_SPL_FS_LOAD_KERNEL_NAME);
+ 	file = env_get("falcon_image_file");
+@@ -155,16 +155,6 @@ defaults:
+ 	if (err)
+ 		return err;
+ 
+-#if IS_ENABLED(CONFIG_SPL_OS_BOOT_ARGS)
+-	err = file_fat_read(CONFIG_SPL_FS_LOAD_ARGS_NAME,
+-			    (void *)CONFIG_SPL_PAYLOAD_ARGS_ADDR, 0);
+-	if (err <= 0) {
+-		printf("%s: error reading image %s, err - %d\n",
+-		       __func__, CONFIG_SPL_FS_LOAD_ARGS_NAME, err);
+-		return -1;
+-	}
+-#endif
+-
+ 	return 0;
+ }
+ #else
 -- 
-2.34.1
+2.47.3
 
